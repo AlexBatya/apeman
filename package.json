@@ -1,0 +1,27 @@
+{
+  "name": "apeman",
+  "version": "1.0.0",
+  "description": "",
+  "main": "build/apeman.js",
+  "bin": "build/apeman.js",
+  "scripts": {
+    "build": "tsc && pkg .",
+    "start": "node build/apeman.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^20.8.0",
+    "axios": "^1.5.1",
+    "colors": "^1.4.0",
+    "pkg": "^5.8.1",
+    "zip-lib": "^0.7.3"
+  },
+  "pkg":{
+    "scripts": "build/*.js",
+    "assets": [
+      "node_modules/axios/dist/node/axios.cjs"
+    ]
+  } 
+}
