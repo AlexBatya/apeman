@@ -5,7 +5,7 @@ import {deletePattern, createPattern, downloadPatter, updatePattern, checkAllPat
 
 (async () => {
     if(process.argv.includes('--download') || process.argv.includes('-d')){
-        const req: any = await downloadPatter(process.argv[2]);
+        const req: any = await downloadPatter(process.argv[2], process.argv[3]);
         console.log(req);
     }
     if(process.argv.includes('--upload') || process.argv.includes('-u')){
@@ -42,6 +42,8 @@ import {deletePattern, createPattern, downloadPatter, updatePattern, checkAllPat
   -r --remove        Удалить паттерн: apeman <папка> -r\n
   -c --check         Проверить есть ли такой паттерн: apeman <папка> -c\n
   -a --checkAll      Посмотреть все паттерны на сервере: apeman -a\n
+Примеры: /n
+  apeman <pattern из библиотеки> <кастомное название> -d
   `)
     }
 })();

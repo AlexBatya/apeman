@@ -67,7 +67,7 @@ export function createPattern(name: string){
         const dir = './'
 
         const zip = new Zipping();
-        zip.dirLink = dir + name 
+        zip.dirLink = path.basename(dir + name, path.extname(dir + name)) 
         zip.fileZip = dir + name + '.zip';
 
 
@@ -131,7 +131,7 @@ export async function deletePattern(name: string){
     
 }
 
-export async function downloadPatter(name: string){
+export async function downloadPatter(name: string, customName: string){
     return new Promise(async (res: any) => { 
         const dir = process.cwd(); 
 
@@ -149,7 +149,7 @@ export async function downloadPatter(name: string){
                 res()
             })
 
-            await zl.extract(path.join(dir, 'downloadArchiv.zip'), path.resolve(dir, name))
+            await zl.extract(path.join(dir, 'downloadArchiv.zip'), path.resolve(dir, customName))
             fs.unlinkSync(path.join(dir, 'downloadArchiv.zip'))
             res(reqData.data.answer)
         }
