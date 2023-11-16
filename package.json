@@ -16,12 +16,16 @@
     "axios": "^1.5.1",
     "colors": "^1.4.0",
     "pkg": "^5.8.1",
+    "rimraf": "^5.0.5",
     "zip-lib": "^0.7.3"
   },
-  "pkg":{
+  "pkg": {
     "scripts": "build/*.js",
+    "targets": [
+      "node18-win-x64"
+    ],
     "assets": [
       "node_modules/axios/dist/node/axios.cjs"
     ]
-  } 
+  }
 }

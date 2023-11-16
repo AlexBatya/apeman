@@ -3,6 +3,7 @@ import fs from 'fs';
 import color from 'colors';
 
 import axios from 'axios';
+import { rimraf } from 'rimraf';
 
 const zl = require('zip-lib');
 
@@ -53,9 +54,15 @@ class Zipping{
     dirLink: any = null; 
     fileZip: any = null;
 
-    async create(){ 
+    async createFolder(){ 
         return new Promise(async (res: any) => {
             await zl.archiveFolder(this.dirLink, this.fileZip)
+            res()
+        })
+    }
+    async createFile(){ 
+        return new Promise(async (res: any) => {
+            await zl.archiveFile(this.dirLink, this.fileZip)
             res()
         })
     }
@@ -67,11 +74,18 @@ export function createPattern(name: string){
         const dir = './'
 
         const zip = new Zipping();
-        zip.dirLink = path.basename(dir + name, path.extname(dir + name)) 
-        zip.fileZip = dir + name + '.zip';
 
 
-        await zip.create();
+        if(fs.lstatSync(path.basename(dir + name)).isFile()){
+            zip.dirLink = path.basename(dir + name) 
+            zip.fileZip = dir + name + '.zip';
+            await zip.createFile();
+        }
+        else{
+            zip.dirLink = path.basename(dir + name, path.extname(dir + name)) 
+            zip.fileZip = dir + name + '.zip';
+            await zip.createFolder();
+        }
 
 
         const readStream = fs.createReadStream(zip.fileZip);
@@ -79,7 +93,7 @@ export function createPattern(name: string){
         readStream.on('data', chunk => chunks.push(chunk))
         readStream.on('end', async () => {
             const data: data = {
-                name: name,
+                name: path.basename(dir + name, path.extname(dir + name)),
                 object: Buffer.concat(chunks)
             } 
 
@@ -100,7 +114,7 @@ export function updatePattern(name: string){
         zip.fileZip = dir + name + '.zip';
 
 
-        await zip.create();
+        await zip.createFolder();
 
 
         const readStream = fs.createReadStream(zip.fileZip);
@@ -131,6 +145,64 @@ export async function deletePattern(name: string){
     
 }
 
+const deleteFolderRecursive = function (directoryPath: string) {
+    return new Promise((res: any) => {
+        if(directoryPath != '/'){
+            if (fs.existsSync(directoryPath)) {
+                fs.readdirSync(directoryPath).forEach((file, index) => {
+                    const curPath = path.join(directoryPath, file);
+                    if (fs.lstatSync(curPath).isDirectory()) {
+                    // recurse
+                    deleteFolderRecursive(curPath);
+                    } else {
+                    // delete file
+                    fs.unlinkSync(curPath);
+                    }
+                });
+                fs.rmdirSync(directoryPath);
+                res()
+            }
+        }
+    })
+};
+
+function moveFile(dir: string, name: string, customName: string){
+    return new Promise(async (res: any) => {
+        const reqular = /(.*)\.[^.]+$/;
+
+        const link: any = path.join(dir, reg(customName, reqular));  
+        const files: any = fs.readdirSync(link).map(elem => {
+            if(fs.lstatSync(path.join(dir, reg(customName, reqular), elem))){
+                return {
+                    key: true,
+                    file: elem
+                }
+            }
+        }) 
+        if(files.length == 1){
+            const readStream = fs.createReadStream(path.join(dir, reg(customName, reqular), files[0].file))
+            const writeStream = fs.createWriteStream(path.join(dir, customName))
+            readStream.on('data', (chunk) => {
+                writeStream.write(chunk)
+            })
+            readStream.on('end', () => {
+                res()
+            })
+        }
+        else{
+            res()
+        }
+    })
+}
+
+function reg(str: string, regular: any){
+    const filterr: any = new RegExp(regular)
+    const array: any[] = str.split(filterr)
+    const arrayOne: any = array.filter(elem => elem != "");
+    const ret: string = arrayOne[0];
+    return ret
+}
+
 export async function downloadPatter(name: string, customName: string){
     return new Promise(async (res: any) => { 
         const dir = process.cwd(); 
@@ -149,7 +221,13 @@ export async function downloadPatter(name: string, customName: string){
                 res()
             })
 
-            await zl.extract(path.join(dir, 'downloadArchiv.zip'), path.resolve(dir, customName))
+            const reqular = /(.*)\.[^.]+$/;
+            await zl.extract(path.join(dir, 'downloadArchiv.zip'), reg(customName, reqular))
+
+            await moveFile(dir, name, customName)
+
+            
+            deleteFolderRecursive(path.join(dir, reg(customName, reqular)))
             fs.unlinkSync(path.join(dir, 'downloadArchiv.zip'))
             res(reqData.data.answer)
         }
